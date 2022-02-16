@@ -6,7 +6,7 @@ pub mod device {
     use influxdb::InfluxDbWriteable;
     // use influxdb::{Query, ReadQuery, Timestamp};
 
-    use common::device_report::DeviceReport;
+    use common::{UnitsConvertion,device_report::DeviceReport};
 
     #[derive(Debug, InfluxDbWriteable)]
     struct Measure<'a> {
@@ -28,7 +28,7 @@ pub mod device {
                     time: time_stamp,
                     device_id: device_id,
                     beacon_id: std::str::from_utf8(&b.id).unwrap_or("unknown"),
-                    rssi: b.rssi,
+                    rssi: b.rssi.dBm_to_W(),
                 };
                 get_influx_cli()
                     .query(event.into_query("measure"))
