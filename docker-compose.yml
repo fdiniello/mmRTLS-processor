@@ -1,0 +1,50 @@
+version: "3"
+
+services:
+  postgres:
+    image: "postgres:latest"
+    container_name: "postgres"
+    ports:
+    - 5432:5432
+    environment:
+    - POSTGRES_USER=mmRTLS
+    - POSTGRES_PASSWORD=AJzYhFltZXRiGQ
+    - POSTGRES_DB=mmRTLS_db
+    # volumes:
+    # - ./db-data/:/var/lib/postgresql/data/
+    
+  mqtt_broker:
+    image: "eclipse-mosquitto:latest"
+    container_name: "mosquitto"
+    network_mode: host
+ 
+  influx:
+    container_name: "influxdb"
+    # volumes:
+    # - ./influx-data:/var/lib/influxdb
+    ports:
+    - 8086:8086
+    image: "influxdb:1.8.10"
+    environment:
+    - INFLUXDB_HTTP_AUTH_ENABLED=true
+    - INFLUXDB_ADMIN_USER=admin
+    - INFLUXDB_ADMIN_PASSWORD=xHKvboa0Qlvhtg
+    - INFLUXDB_USER=mmRTLS
+    - INFLUXDB_USER_PASSWORD=Lkj9s2iAnd7Gxg
+    - INFLUXDB_DB=db0
+    # image: "influxdb:latest"
+    # environment:
+    # - DOCKER_INFLUXDB_INIT_MODE=setup
+    # - DOCKER_INFLUXDB_INIT_USERNAME=mmRTLS
+    # - DOCKER_INFLUXDB_INIT_PASSWORD=Lkj9s2iAnd7Gxg
+    # - DOCKER_INFLUXDB_INIT_ORG=glb
+    # - DOCKER_INFLUXDB_INIT_BUCKET=db0
+    # - DOCKER_INFLUXDB_INIT_CLI_CONFIG_NAME=default
+    # - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=xHKvboa0Qlvhtg
+
+  chronograf:
+    image: "chronograf"
+    container_name: "chronograf"
+    ports:
+    - 8888:8888
+

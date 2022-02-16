@@ -1,0 +1,33 @@
+[package]
+name = "mm_rtls"
+version = "0.1.0"
+edition = "2021"
+default-run = "mm_rtls"
+
+[lib]
+name = "common"
+path = "src/common/lib.rs"
+
+[[bin]]
+name = "nav_dev"
+path = "src/nav_dev/main.rs"
+
+[[bin]]
+name = "mm_rtls"
+path = "src/mmRTLS/main.rs"
+
+[[test]]
+name =  "all"
+path = "tests/all.rs"
+
+[dependencies]
+tokio = { version = "1.16.1", features = ["rt-multi-thread", "macros"] }
+dotenv = "0.15.0"
+serde = "1.0.136"
+serde_json = { version = "1.0.79" }
+paho-mqtt = "0.10"
+async-channel = "1.6"
+async-std = "1"
+futures = "0.3"
+influxdb = { version = "0.5.2", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
+chrono = "0.4.19"
