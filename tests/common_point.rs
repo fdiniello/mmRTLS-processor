@@ -6,7 +6,7 @@ use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_4, SQRT_2};
 fn point() {
     // New
     let p = Point::new(0.0, 0.0);
-    print!("Testint Point::new()");
+    print!("Testing Point::new()");
     assert_eq!(p, Point { x: 0.0, y: 0.0 });
     assert_ne!(p, Point { x: -1.0, y: 1.0 });
     println!(" ... ok");

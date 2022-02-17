@@ -1,2 +1,2 @@
-mod common_point;
 mod common;
+mod common_point;

@@ -1,8 +1,6 @@
-mod antenna;
-
 use std::{thread, time};
 
-use antenna::Antenna;
+use common::antenna::Antenna;
 use common::device_report::{Beacon, DeviceReport};
 use common::helper::for_sync::{get_mqtt_cli, mqtt_pub};
 use common::point::Point;
@@ -11,13 +9,13 @@ fn main() {
     let client = get_mqtt_cli();
     let period = time::Duration::from_millis(1000);
 
-    let mut position = Point::new(15.0, 0.0);
+    let mut position = Point::new(12.0, 0.0);
 
     let antenna = vec![
-        Antenna::new("e6:ad:0b:2e:d7:11", -31.0, Point::new(15.0, 15.0)),
-        Antenna::new("c2:b5:f5:cc:e6:88", -32.0, Point::new(15.0, -15.0)),
-        Antenna::new("e6:2e:e6:88:f5:cc", -33.0, Point::new(-15.0, 15.0)),
-        Antenna::new("c2:ad:0b:b5:11:d7", -34.0, Point::new(-15.0, -15.0)),
+        Antenna::new("e6:ad:0b:2e:d7:11", 30.0, Point::new(15.0, 15.0)),
+        Antenna::new("c2:b5:f5:cc:e6:88", 30.0, Point::new(15.0, -15.0)),
+        Antenna::new("e6:2e:e6:88:f5:cc", 30.0, Point::new(-15.0, 15.0)),
+        Antenna::new("c2:ad:0b:b5:11:d7", 30.0, Point::new(-15.0, -15.0)),
     ];
 
     let topic = "device/60:f2:62:01:a9:28/report";
