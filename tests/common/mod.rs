@@ -1,5 +1,5 @@
-pub mod point;
 pub mod antenna;
+pub mod point;
 
 use common::UnitsConvertion;
 

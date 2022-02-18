@@ -1,5 +1,5 @@
-use common::antenna::Antenna;
-use common::point::Point;
+use common::Antenna;
+use common::Point;
 
 #[test]
 fn antenna_test() {

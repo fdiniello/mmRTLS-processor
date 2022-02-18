@@ -1,9 +1,7 @@
 use std::{thread, time};
 
-use common::antenna::Antenna;
-use common::device_report::{Beacon, DeviceReport};
 use common::helper::for_sync::{get_mqtt_cli, mqtt_pub};
-use common::point::Point;
+use common::{Antenna, Beacon, DeviceReport, Point};
 
 fn main() {
     let client = get_mqtt_cli();

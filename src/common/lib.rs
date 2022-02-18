@@ -1,11 +1,17 @@
 #![allow(confusable_idents)]
 #![allow(mixed_script_confusables)]
 
-pub mod antenna;
-pub mod device_report;
 pub mod helper;
-pub mod point;
 pub mod influxdb_models;
+
+pub type DeviceReport = device_report::DeviceReport;
+pub type Beacon = device_report::Beacon;
+pub type Antenna = antenna::Antenna;
+pub type Point = point::Point;
+
+mod antenna;
+mod device_report;
+mod point;
 
 pub trait UnitsConvertion {
     #[allow(non_snake_case)]

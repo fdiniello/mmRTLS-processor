@@ -1,6 +1,6 @@
 pub mod device {
-    use common::{device_report::DeviceReport, UnitsConvertion};
     use common::influxdb_models::BeaconMeasure;
+    use common::{DeviceReport, UnitsConvertion};
 
     pub async fn report(device_id: &str, payload: &str) {
         if let Ok(device_report) = serde_json::from_str::<DeviceReport>(payload) {
@@ -11,7 +11,7 @@ pub mod device {
                     std::str::from_utf8(&beacon.id).unwrap_or("unknown"),
                     beacon.rssi.dBm_to_W(),
                 );
-                measure.write_for(device_id,).await;
+                measure.write_for(device_id).await;
             }
         } else {
             println!("Unable to parse: {}", payload);

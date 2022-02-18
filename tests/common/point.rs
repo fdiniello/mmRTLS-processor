@@ -1,4 +1,4 @@
-use common::point::Point;
+use common::Point;
 
 use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_4, SQRT_2};
 
