@@ -1,9 +1,9 @@
-mod handler;
-
+use futures::stream::StreamExt;
 use tokio;
 
+mod handler;
+
 use common::helper::for_async::{get_mqtt_cli_and_stream, mqtt_cli_reconnect, mqtt_subscribe};
-use futures::stream::StreamExt;
 
 #[tokio::main]
 async fn main() {

@@ -5,6 +5,7 @@ pub mod antenna;
 pub mod device_report;
 pub mod helper;
 pub mod point;
+pub mod influxdb_models;
 
 pub trait UnitsConvertion {
     #[allow(non_snake_case)]
