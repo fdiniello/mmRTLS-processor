@@ -1,2 +1,2 @@
 mod common;
-mod common_point;
+mod influxdb_models;

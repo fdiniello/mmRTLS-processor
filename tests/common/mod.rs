@@ -1,3 +1,6 @@
+pub mod point;
+pub mod antenna;
+
 use common::UnitsConvertion;
 
 #[test]

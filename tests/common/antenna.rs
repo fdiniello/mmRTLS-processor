@@ -1,6 +1,5 @@
 use common::antenna::Antenna;
 use common::point::Point;
-use common::UnitsConvertion;
 
 #[test]
 fn antenna_test() {
