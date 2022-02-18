@@ -26,14 +26,11 @@ impl BeaconMeasure {
             time: chrono::Utc::now(),
         }
     }
-    pub async fn write_for(self, device_id: &str) {
+    pub async fn write_for(self, device_id: &str) -> Result<String,influxdb::Error>{
         let table_name = format!("measure_{}", device_id);
-        let result = get_influx_cli()
+        get_influx_cli()
             .query(self.into_query(table_name.as_str()))
-            .await;
-        if result.is_err() {
-            print!("InfluxDB error when writing");
-        }
+            .await
     }
     pub async fn get_last_for(device_id: &str) -> Result<Vec<BeaconMeasure>, influxdb::Error> {
         let query = format!( "SELECT last(\"rssi\") FROM \"db0\"..\"measure_{}\" WHERE \"time\" > now() - 2s AND \"time\" < now() GROUP BY \"beacon_id\";", device_id);
