@@ -1,15 +1,15 @@
 use chrono::{DateTime, Utc};
 use influxdb::{InfluxDbWriteable, ReadQuery};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::helper::for_async::get_influx_cli;
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct Tags {
     beacon_id: String,
 }
 
-#[derive(Debug, PartialEq, Clone, InfluxDbWriteable)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, InfluxDbWriteable)]
 pub struct BeaconMeasure {
     #[influxdb(tag)]
     pub beacon_id: String,
@@ -26,7 +26,7 @@ impl BeaconMeasure {
             time: chrono::Utc::now(),
         }
     }
-    pub async fn write_for(self, device_id: &str) -> Result<String,influxdb::Error>{
+    pub async fn write_for(self, device_id: &str) -> Result<String, influxdb::Error> {
         let table_name = format!("measure_{}", device_id);
         get_influx_cli()
             .query(self.into_query(table_name.as_str()))

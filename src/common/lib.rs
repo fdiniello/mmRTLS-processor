@@ -1,17 +1,21 @@
 #![allow(confusable_idents)]
 #![allow(mixed_script_confusables)]
 
+use serde::{Deserialize, Serialize};
+
 pub mod helper;
 pub mod influxdb_models;
 
-pub type DeviceReport = device_report::DeviceReport;
-pub type Beacon = device_report::Beacon;
 pub type Antenna = antenna::Antenna;
 pub type Point = point::Point;
 
 mod antenna;
-mod device_report;
 mod point;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DeviceReport {
+    pub data: Vec<influxdb_models::BeaconMeasure>,
+}
 
 pub trait UnitsConvertion {
     #[allow(non_snake_case)]

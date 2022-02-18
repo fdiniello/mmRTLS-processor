@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 
 #[derive(Debug, Default)]
 pub struct Antenna {
-    pub id: [u8; 17],
+    pub id: String,
     pub tssi: f64,
     pub coord: Point,
 }
@@ -14,12 +14,15 @@ impl Antenna {
     #[allow(non_upper_case_globals)]
     const λ: f64 = Self::C / Self::F;
 
-    pub fn new(id: &str, tssi: f64, coord: Point) -> Antenna {
-        let mut a: Antenna = Default::default();
-        a.id.copy_from_slice(id.as_bytes());
-        a.tssi = tssi;
-        a.coord = coord;
-        a
+    pub fn new<S1>(id: S1, tssi: f64, coord: Point) -> Antenna
+    where
+        S1: ToString,
+    {
+        Antenna {
+            id: id.to_string(),
+            coord: coord,
+            tssi: tssi,
+        }
     }
 
     pub fn get_rssi(&self, distance: f64) -> f64 {

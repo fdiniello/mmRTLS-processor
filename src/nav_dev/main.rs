@@ -1,7 +1,7 @@
 use std::{thread, time};
 
 use common::helper::for_sync::{get_mqtt_cli, mqtt_pub};
-use common::{Antenna, Beacon, DeviceReport, Point};
+use common::{influxdb_models::BeaconMeasure, Antenna, DeviceReport, Point};
 
 fn main() {
     let client = get_mqtt_cli();
@@ -26,10 +26,7 @@ fn main() {
             let d = ant.coord.distance_to(&position);
             let rssi = ant.get_rssi(d);
 
-            report.data.push(Beacon {
-                id: ant.id,
-                rssi: rssi,
-            });
+            report.data.push(BeaconMeasure::new(&ant.id, rssi));
         }
         let payload = serde_json::to_string(&report).unwrap_or("".to_string());
         mqtt_pub(&client, topic, payload.as_str()).expect("Pub error");
