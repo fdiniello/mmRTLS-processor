@@ -35,9 +35,9 @@ impl Point {
             Some(self / self.module())
         }
     }
-    pub fn rotate_by(&mut self, alpha: f64) {
+    pub fn rotate_by(&mut self, α: f64) {
         let m = self.module();
-        let (sin, cos) = f64::sin_cos(self.phase() + alpha);
+        let (sin, cos) = f64::sin_cos(self.phase() + α);
         self.x = m * cos;
         self.y = m * sin;
     }
