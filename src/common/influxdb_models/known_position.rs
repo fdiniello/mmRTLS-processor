@@ -13,7 +13,6 @@ pub struct KnownPosition {
 }
 
 impl KnownPosition {
-    #[allow(non_snake_case)]
     pub fn new(pos: Point) -> KnownPosition {
         KnownPosition {
             x: pos.x,
@@ -27,6 +26,20 @@ impl KnownPosition {
             .query(self.into_query(table_name.as_str()))
             .await
     }
+    pub async fn get_last_for(device_id: &str) -> Result<Vec<KnownPosition>, influxdb::Error> {
+        let query = format!(
+            "SELECT x, y FROM /position_{}/ WHERE time > now() - 4s AND time < now();",
+            device_id
+        );
+
+        let mut database_result = get_influx_cli().json_query(ReadQuery::new(query)).await?;
+
+        let series = &database_result.deserialize_next::<KnownPosition>()?.series;
+        if series.len() >= 1 {
+            let vec = &series[0].values;
+            Ok(vec.to_vec())
+        } else {
+            Ok(vec![])
+        }
+    }
 }
-
-

@@ -1,4 +1,7 @@
-use std::{ops, fmt::{Display, Formatter}};
+use std::{
+    fmt::{Display, Formatter},
+    ops,
+};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Point {

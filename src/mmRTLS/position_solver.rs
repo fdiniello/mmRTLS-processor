@@ -1,7 +1,10 @@
+use common::{
+    influxdb_models::{BeaconMeasure, KnownPosition},
+    Antenna, Point, MAC,
+};
 use std::collections::HashMap;
-use common::{MAC,Antenna,influxdb_models::{BeaconMeasure,KnownPosition},Point};
 
-struct KnownDistance{
+struct KnownDistance {
     point: Point,
     dist: f64,
 }
@@ -9,14 +12,17 @@ struct KnownDistance{
 pub async fn solve_for(device_id: MAC) -> Result<Point, ()> {
     let antennas = anntennas_hashmap();
 
-    let measure = BeaconMeasure::get_last_for(device_id.as_str()).await.unwrap();
+    let measure = BeaconMeasure::get_last_for(device_id.as_str())
+        .await
+        .unwrap();
 
-    let knwon_distance = measure.iter().
-        filter_map(|m|{
-            if let Some (a ) = antennas.get( &m.beacon_id ){
-                let kd = KnownDistance{
+    let knwon_distance = measure
+        .iter()
+        .filter_map(|m| {
+            if let Some(a) = antennas.get(&m.beacon_id) {
+                let kd = KnownDistance {
                     point: a.coord,
-                    dist: a.get_distance_with_W( m.rssi ),
+                    dist: a.get_distance_with_W(m.rssi),
                 };
                 Some(kd)
             } else {
@@ -29,23 +35,22 @@ pub async fn solve_for(device_id: MAC) -> Result<Point, ()> {
     let n = knwon_distance.len();
     for i in 0..n {
         for j in 0..n {
-            if i == j { continue; }
+            if i == j {
+                continue;
+            }
 
             for k in 0..n {
-                if i == k || j == k { continue; }
+                if i == k || j == k {
+                    continue;
+                }
 
                 let point = trilat(&knwon_distance[i], &knwon_distance[j], &knwon_distance[k]);
                 if let Some(point) = point {
                     posible_positions.push(point);
-                } 
+                }
             }
         }
     }
-    // posible_positions.sort_by( |a,b| f64::partial_cmp( &a.dist, &b.dist ).unwrap() );
-    // if posible_positions.len() > 15 {
-    //     posible_positions.drain(15..);
-    // }
-    
 
     let mut pos = Point::new(0.0, 0.0);
     let mut divisor = 0.0;
@@ -58,12 +63,12 @@ pub async fn solve_for(device_id: MAC) -> Result<Point, ()> {
     pos /= divisor;
 
     // println!("Pos: {}", pos);
-    let _r = KnownPosition::new(pos).write_for(device_id.as_str() ).await;
+    let _r = KnownPosition::new(pos).write_for(device_id.as_str()).await;
 
     Ok(pos)
 }
 
-fn trilat( a: &KnownDistance, b: &KnownDistance, c: &KnownDistance) -> Option<KnownDistance>{
+fn trilat(a: &KnownDistance, b: &KnownDistance, c: &KnownDistance) -> Option<KnownDistance> {
     #![allow(non_snake_case)]
 
     let points = vec![a.point, b.point, c.point];
@@ -73,7 +78,7 @@ fn trilat( a: &KnownDistance, b: &KnownDistance, c: &KnownDistance) -> Option<Kn
         }
     }
 
-    // We have two triangles that share a side, 
+    // We have two triangles that share a side,
     // Da and Db are both a hypotenuse,
     // h is the shared side
     // D is the lineal sum of both coaxial sides.
@@ -86,89 +91,83 @@ fn trilat( a: &KnownDistance, b: &KnownDistance, c: &KnownDistance) -> Option<Kn
     //    *-----------*
     //    A           B => D = BA
 
-
     let D = (b.point - a.point).module();
-        
-    let d1 = ( D.powi(2) + a.dist.powi(2) -b.dist.powi(2) ) / (2.0*D);
-    let h = f64::sqrt( a.dist.powi(2) - d1.powi(2) );
+
+    let d1 = (D.powi(2) + a.dist.powi(2) - b.dist.powi(2)) / (2.0 * D);
+    let h = f64::sqrt(a.dist.powi(2) - d1.powi(2));
     if h.is_nan() {
         return None;
     }
 
     // With points A and B, we can find the Position P, but we the fact is that there are
     // two posible solutions, we build a rhombus with both posible P:
-    let D_ver = (b.point-a.point).to_versor().unwrap();
-    
-    let mut upper= D_ver * a.dist;
-    let mut downer= D_ver * a.dist;
-    
+    let D_ver = (b.point - a.point).to_versor().unwrap();
+
+    let mut upper = D_ver * a.dist;
+    let mut downer = D_ver * a.dist;
+
     // we need to rotate that direction by alpha and -alpha
-    let alpha = f64::tan(h/d1);
+    let alpha = f64::tan(h / d1);
     upper.rotate_by(alpha);
     downer.rotate_by(-alpha);
 
     // Now we have two vectors with |Da| that point from A where the two posible positions are
-    let P = vec![ a.point + upper,  a.point + downer];
+    let P = vec![a.point + upper, a.point + downer];
 
     //Now we need to see which P[0] or P[1] is at distance Dc from pointC.
     //But since all numbers we got (Da,Db and Dc) cointain a lot of error and noise
     // we know that they won't be the same number so we need to pick the point that makes the distance to pointC the closest to Dc
-    
-    let dist_to_C = vec![ 
-        P[0].distance_to( &c.point ), 
-        P[1].distance_to( &c.point ),
-    ];
-    let error = vec![ 
-        f64::abs( dist_to_C[0] - c.dist)/c.dist, 
-        f64::abs( dist_to_C[1] - c.dist)/c.dist, 
+
+    let dist_to_C = vec![P[0].distance_to(&c.point), P[1].distance_to(&c.point)];
+    let error = vec![
+        f64::abs(dist_to_C[0] - c.dist) / c.dist,
+        f64::abs(dist_to_C[1] - c.dist) / c.dist,
     ];
 
     if error[0] < error[1] {
-        Some( KnownDistance{
+        Some(KnownDistance {
             point: P[0],
-            dist: error[0]
+            dist: error[0],
         })
     } else {
-        Some( KnownDistance{
+        Some(KnownDistance {
             point: P[1],
-            dist: error[1]
+            dist: error[1],
         })
     }
 }
 
-
-fn anntennas_hashmap() -> HashMap<MAC,Antenna> {
+fn anntennas_hashmap() -> HashMap<MAC, Antenna> {
     let data = vec![
         Antenna::new("e6:ad:0b:2e:d7:11", 30.0, Point::new(15.0, 15.0)),
         Antenna::new("c2:b5:f5:cc:e6:88", 30.0, Point::new(15.0, -15.0)),
         Antenna::new("e6:2e:e6:88:f5:cc", 30.0, Point::new(-15.0, 15.0)),
         Antenna::new("c2:ad:0b:b5:11:d7", 30.0, Point::new(-15.0, -15.0)),
     ];
-    let mut map: HashMap<MAC,Antenna> = HashMap::new();
+    let mut map: HashMap<MAC, Antenna> = HashMap::new();
     for a in data.iter() {
-        map.insert( a.id.clone(), a.clone() );
+        map.insert(a.id.clone(), a.clone());
     }
     map.into()
 }
 
 #[test]
-fn test_trilat(){
-    let a = KnownDistance{
+fn test_trilat() {
+    let a = KnownDistance {
         dist: 6.3,
         point: Point::new(0.0, 0.0),
     };
-    let b = KnownDistance{
+    let b = KnownDistance {
         dist: 3.1,
         point: Point::new(5.0, 6.5),
     };
-    let c = KnownDistance{ 
+    let c = KnownDistance {
         dist: 5.5,
         point: Point::new(9.0, 0.0),
     };
 
-    let pos = trilat(&a,&b,&c).unwrap();
+    let pos = trilat(&a, &b, &c).unwrap();
 
     println!("Calculated {} +/- {:.2}", pos.point, pos.dist);
     println!("Position expected (5.0, 3.5)")
-
 }
