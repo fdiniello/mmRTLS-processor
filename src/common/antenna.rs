@@ -2,7 +2,7 @@ use std::{f64::consts::PI, str::FromStr};
 
 use crate::{Point, UnitsConvertion, MAC};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Antenna {
     pub id: MAC,
     pub tssi: f64,

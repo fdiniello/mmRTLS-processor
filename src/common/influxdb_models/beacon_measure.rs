@@ -29,7 +29,7 @@ impl BeaconMeasure {
             .await
     }
     pub async fn get_last_for(device_id: &str) -> Result<Vec<BeaconMeasure>, influxdb::Error> {
-        let query = format!( "SELECT last(\"rssi\") FROM \"db0\"..\"measure_{}\" WHERE \"time\" > now() - 2s AND \"time\" < now() GROUP BY \"beacon_id\";", device_id);
+        let query = format!( "SELECT mean(rssi) FROM /measure_{}/ WHERE time > now() - 4s AND time < now() GROUP BY beacon_id;", device_id);
 
         let mut database_result = get_influx_cli().json_query(ReadQuery::new(query)).await?;
 
@@ -40,7 +40,7 @@ impl BeaconMeasure {
         #[derive(Deserialize)]
         struct Value {
             time: DateTime<Utc>,
-            last: f64,
+            mean: f64,
         }
         let vect = database_result
             .deserialize_next_tagged::<Tags, Value>()?
@@ -48,7 +48,7 @@ impl BeaconMeasure {
             .into_iter()
             .map(|measure| BeaconMeasure {
                 beacon_id: measure.tags.beacon_id,
-                rssi: measure.values[0].last,
+                rssi: measure.values[0].mean,
                 time: measure.values[0].time,
             })
             .collect::<Vec<BeaconMeasure>>();
