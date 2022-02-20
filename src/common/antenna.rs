@@ -1,9 +1,10 @@
-use crate::{point::Point, UnitsConvertion};
-use std::f64::consts::PI;
+use std::{f64::consts::PI, str::FromStr};
+
+use crate::{Point, UnitsConvertion, MAC};
 
 #[derive(Debug, Default)]
 pub struct Antenna {
-    pub id: String,
+    pub id: MAC,
     pub tssi: f64,
     pub coord: Point,
 }
@@ -14,12 +15,9 @@ impl Antenna {
     #[allow(non_upper_case_globals)]
     const λ: f64 = Self::C / Self::F;
 
-    pub fn new<S1>(id: S1, tssi: f64, coord: Point) -> Antenna
-    where
-        S1: ToString,
-    {
+    pub fn new(id: &str, tssi: f64, coord: Point) -> Antenna {
         Antenna {
-            id: id.to_string(),
+            id: MAC::from_str(id).unwrap(),
             coord: coord,
             tssi: tssi,
         }

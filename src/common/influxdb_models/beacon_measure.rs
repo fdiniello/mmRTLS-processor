@@ -3,25 +3,21 @@ use influxdb::{InfluxDbWriteable, ReadQuery};
 use serde::{Deserialize, Serialize};
 
 use crate::helper::for_async::get_influx_cli;
-
-#[derive(Serialize, Deserialize)]
-struct Tags {
-    beacon_id: String,
-}
+use crate::MAC;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, InfluxDbWriteable)]
 pub struct BeaconMeasure {
     #[influxdb(tag)]
-    pub beacon_id: String,
+    pub beacon_id: MAC,
     pub rssi: f64,
     pub time: DateTime<Utc>,
 }
 
 impl BeaconMeasure {
     #[allow(non_snake_case)]
-    pub fn new(beacon_id: &str, rssi_W: f64) -> BeaconMeasure {
+    pub fn new(beacon_id: &MAC, rssi_W: f64) -> BeaconMeasure {
         BeaconMeasure {
-            beacon_id: beacon_id.into(),
+            beacon_id: beacon_id.clone(),
             rssi: rssi_W,
             time: chrono::Utc::now(),
         }
@@ -37,6 +33,10 @@ impl BeaconMeasure {
 
         let mut database_result = get_influx_cli().json_query(ReadQuery::new(query)).await?;
 
+        #[derive(Serialize, Deserialize)]
+        struct Tags {
+            beacon_id: MAC,
+        }
         #[derive(Deserialize)]
         struct Value {
             time: DateTime<Utc>,

@@ -5,9 +5,11 @@ use serde::{Deserialize, Serialize};
 
 pub mod helper;
 pub mod influxdb_models;
+mod mac;
 
 pub type Antenna = antenna::Antenna;
 pub type Point = point::Point;
+pub type MAC = mac::MAC;
 
 mod antenna;
 mod point;
