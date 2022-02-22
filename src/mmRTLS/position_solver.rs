@@ -2,7 +2,7 @@ use itertools::Itertools;
 use std::collections::HashMap;
 
 use common::{
-    influxdb_models::{beacon_measure::BeaconMeasureWStats, BeaconMeasure, KnownPosition},
+    influxdb_models::{BeaconMeasure, KnownPosition},
     Antenna, Point, MAC,
 };
 struct KnownDistance {
@@ -13,7 +13,7 @@ struct KnownDistance {
 pub async fn solve_for(device_id: MAC) -> Result<Point, ()> {
     let antennas = anntennas_hashmap();
 
-    let measure = BeaconMeasure::get_full_stats_for(device_id.as_str())
+    let measure = BeaconMeasure::get_for(device_id.as_str())
         .await
         .unwrap();
 
@@ -23,7 +23,7 @@ pub async fn solve_for(device_id: MAC) -> Result<Point, ()> {
             if let Some(a) = antennas.get(&m.beacon_id) {
                 let kd = KnownDistance {
                     point: a.coord,
-                    dist: a.get_distance_with_W(m.mean),
+                    dist: a.get_distance_with_W(m.rssi),
                 };
                 Some(kd)
             } else {

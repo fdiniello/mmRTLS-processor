@@ -10,7 +10,7 @@ async fn beacon_measure_test() {
     let bm = bm1.clone();
     let _result = bm.write_for("AB:CD:EF:12:34:56").await;
 
-    let bm2 = BeaconMeasure::get_last_for("AB:CD:EF:12:34:56")
+    let bm2 = BeaconMeasure::get_for("AB:CD:EF:12:34:56")
         .await
         .unwrap();
     assert_eq!(bm2.len(), 1);
@@ -20,7 +20,7 @@ async fn beacon_measure_test() {
     //wait for the time window to pass
     let delay = common::influxdb_models::beacon_measure::TIME_WINDOW * 1000 + 500;
     tokio::time::sleep(Duration::from_millis(delay)).await;
-    let bm2 = BeaconMeasure::get_last_for("AB:CD:EF:12:34:56")
+    let bm2 = BeaconMeasure::get_for("AB:CD:EF:12:34:56")
         .await
         .unwrap();
     assert_eq!(bm2.len(), 0);
