@@ -5,12 +5,19 @@ use serde::{Deserialize, Serialize};
 use crate::helper::for_async::get_influx_cli;
 use crate::MAC;
 
+pub const TIME_WINDOW: u64 = 4;
+
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, InfluxDbWriteable)]
 pub struct BeaconMeasure {
     #[influxdb(tag)]
     pub beacon_id: MAC,
     pub rssi: f64,
     pub time: DateTime<Utc>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Tags {
+    beacon_id: MAC,
 }
 
 impl BeaconMeasure {
@@ -28,19 +35,15 @@ impl BeaconMeasure {
             .query(self.into_query(table_name.as_str()))
             .await
     }
-    pub async fn get_last_for(device_id: &str) -> Result<Vec<BeaconMeasure>, influxdb::Error> {
-        let query = format!( "SELECT last(\"rssi\") FROM \"db0\"..\"measure_{}\" WHERE \"time\" > now() - 2s AND \"time\" < now() GROUP BY \"beacon_id\";", device_id);
+    pub async fn get_for(device_id: &str) -> Result<Vec<BeaconMeasure>, influxdb::Error> {
+        let query = format!( "SELECT mean(rssi) FROM /measure_{}/ WHERE time > now() - {}s AND time < now() GROUP BY beacon_id;", device_id, TIME_WINDOW);
 
         let mut database_result = get_influx_cli().json_query(ReadQuery::new(query)).await?;
 
-        #[derive(Serialize, Deserialize)]
-        struct Tags {
-            beacon_id: MAC,
-        }
         #[derive(Deserialize)]
         struct Value {
             time: DateTime<Utc>,
-            last: f64,
+            mean: f64,
         }
         let vect = database_result
             .deserialize_next_tagged::<Tags, Value>()?
@@ -48,7 +51,7 @@ impl BeaconMeasure {
             .into_iter()
             .map(|measure| BeaconMeasure {
                 beacon_id: measure.tags.beacon_id,
-                rssi: measure.values[0].last,
+                rssi: measure.values[0].mean,
                 time: measure.values[0].time,
             })
             .collect::<Vec<BeaconMeasure>>();

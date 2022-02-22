@@ -2,6 +2,7 @@ use futures::stream::StreamExt;
 use tokio;
 
 mod handler;
+mod position_solver;
 
 use common::helper::for_async::{get_mqtt_cli_and_stream, mqtt_cli_reconnect, mqtt_subscribe};
 

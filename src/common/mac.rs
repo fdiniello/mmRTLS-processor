@@ -5,7 +5,7 @@ use influxdb::Type;
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Serialize, Serializer};
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub struct MAC {
     s: [u8; 17],
 }

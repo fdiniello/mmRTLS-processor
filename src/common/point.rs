@@ -1,6 +1,9 @@
-use std::ops;
+use std::{
+    fmt::{Display, Formatter},
+    ops,
+};
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -40,6 +43,12 @@ impl Point {
         let (sin, cos) = f64::sin_cos(self.phase() + α);
         self.x = m * cos;
         self.y = m * sin;
+    }
+}
+
+impl Display for Point {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "({:.2},{:.2})", &self.x, &self.y)
     }
 }
 
