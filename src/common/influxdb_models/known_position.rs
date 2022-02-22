@@ -3,7 +3,7 @@ use influxdb::{InfluxDbWriteable, ReadQuery};
 use serde::{Deserialize, Serialize};
 
 use crate::helper::for_async::get_influx_cli;
-use crate::{Point};
+use crate::Point;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, InfluxDbWriteable)]
 pub struct KnownPosition {
@@ -26,10 +26,13 @@ impl KnownPosition {
             .query(self.into_query(table_name.as_str()))
             .await
     }
-    pub async fn get_last_for(device_id: &str) -> Result<Vec<KnownPosition>, influxdb::Error> {
+    pub async fn get_last_for(
+        device_id: &str,
+        time_window: i32,
+    ) -> Result<Option<KnownPosition>, influxdb::Error> {
         let query = format!(
-            "SELECT x, y FROM /position_{}/ WHERE time > now() - 4s AND time < now();",
-            device_id
+            "SELECT mean(x) as x, mean(y) as y FROM /position_{}/ WHERE time > now() - {}s AND time < now();",
+            device_id, time_window
         );
 
         let mut database_result = get_influx_cli().json_query(ReadQuery::new(query)).await?;
@@ -37,9 +40,9 @@ impl KnownPosition {
         let series = &database_result.deserialize_next::<KnownPosition>()?.series;
         if series.len() >= 1 {
             let vec = &series[0].values;
-            Ok(vec.to_vec())
+            Ok(Some(vec[0].clone()))
         } else {
-            Ok(vec![])
+            Ok(None)
         }
     }
 }

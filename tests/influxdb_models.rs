@@ -18,7 +18,8 @@ async fn beacon_measure_test() {
     assert_eq!(bm1.rssi, bm2[0].rssi);
 
     //wait for the time window to pass
-    tokio::time::sleep(Duration::from_millis(4100)).await;
+    let delay = common::influxdb_models::beacon_measure::TIME_WINDOW * 1000 + 500;
+    tokio::time::sleep(Duration::from_millis(delay)).await;
     let bm2 = BeaconMeasure::get_last_for("AB:CD:EF:12:34:56")
         .await
         .unwrap();

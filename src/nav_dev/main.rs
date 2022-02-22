@@ -1,4 +1,7 @@
+use rand_distr::{Distribution, Normal};
 use std::{thread, time};
+
+mod error_report;
 
 use common::helper::for_sync::{get_mqtt_cli, mqtt_pub};
 use common::{
@@ -6,8 +9,8 @@ use common::{
     Antenna, DeviceReport, Point,
 };
 
-
-struct Config{
+#[derive(Clone)]
+pub struct Config {
     period_ms: u64,
     radius: f64,
     noise_level: f64,
@@ -19,11 +22,17 @@ struct Config{
 #[tokio::main]
 async fn main() {
     let config = parse_cli();
+    let period = time::Duration::from_millis(config.period_ms);
+    let noise_gen = Normal::new(0.0, config.noise_level).unwrap();
+
+    if config.real {
+        let config = config.clone();
+        tokio::spawn(async move {
+            let _r = error_report::thread(config).await;
+        });
+    }
 
     let client = get_mqtt_cli();
-
-    let period = time::Duration::from_millis(config.period_ms);
-
 
     let mut position = Point::new(config.radius, 0.0);
 
@@ -44,7 +53,7 @@ async fn main() {
             let d = ant.coord.distance_to(&position);
             let rssi = ant.get_rssi(d);
 
-            let noise: f64 = config.noise_level * (rand::random::<f64>() - 0.5);
+            let noise: f64 = noise_gen.sample(&mut rand::thread_rng());
 
             report.data.push(BeaconMeasure::new(&ant.id, rssi + noise));
         }
@@ -59,7 +68,7 @@ async fn main() {
         thread::sleep(period - start.elapsed());
     }
 }
-fn parse_cli()-> Config{
+fn parse_cli() -> Config {
     use std::env;
     let mut config = Config {
         period_ms: 1000,
@@ -72,27 +81,25 @@ fn parse_cli()-> Config{
 
     let args = env::args().collect::<Vec<String>>();
 
-    for (i,arg) in args.iter().enumerate() {
+    for (i, arg) in args.iter().enumerate() {
         match arg.as_str() {
             "--noise" | "--noise-level" | "-n" => {
-                config.noise_level = args[i+1].parse::<f64>().unwrap();
-            },
+                config.noise_level = args[i + 1].parse::<f64>().unwrap();
+            }
             "--rad" | "--radious" | "-r" => {
-                config.radius = args[i+1].parse::<f64>().unwrap();
+                config.radius = args[i + 1].parse::<f64>().unwrap();
             }
             "--period" | "-p" => {
-                config.period_ms = args[i+1].parse::<u64>().unwrap();
+                config.period_ms = args[i + 1].parse::<u64>().unwrap();
             }
             "--angle" | "--step" => {
-                config.angle_step = args[i+1].parse::<f64>().unwrap();
+                config.angle_step = args[i + 1].parse::<f64>().unwrap();
             }
             "--id" => {
-                config.id = args[i+1].clone();
+                config.id = args[i + 1].clone();
                 config.real = false;
             }
-            _ => {
-
-            },
+            _ => {}
         }
     }
     config

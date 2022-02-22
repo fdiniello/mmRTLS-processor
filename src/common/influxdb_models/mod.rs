@@ -1,6 +1,6 @@
 // pub mod multiple_measures;
-mod beacon_measure;
-mod known_position;
+pub mod beacon_measure;
+pub mod known_position;
 
 // Renaming types for ease of use outside the scope of this module
 

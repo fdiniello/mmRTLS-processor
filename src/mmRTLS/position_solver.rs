@@ -1,9 +1,10 @@
-use common::{
-    influxdb_models::{BeaconMeasure, KnownPosition},
-    Antenna, Point, MAC,
-};
+use itertools::Itertools;
 use std::collections::HashMap;
 
+use common::{
+    influxdb_models::{beacon_measure::BeaconMeasureWStats, BeaconMeasure, KnownPosition},
+    Antenna, Point, MAC,
+};
 struct KnownDistance {
     point: Point,
     dist: f64,
@@ -12,17 +13,17 @@ struct KnownDistance {
 pub async fn solve_for(device_id: MAC) -> Result<Point, ()> {
     let antennas = anntennas_hashmap();
 
-    let measure = BeaconMeasure::get_last_for(device_id.as_str())
+    let measure = BeaconMeasure::get_full_stats_for(device_id.as_str())
         .await
         .unwrap();
 
-    let knwon_distance = measure
+    let known_distance = measure
         .iter()
         .filter_map(|m| {
             if let Some(a) = antennas.get(&m.beacon_id) {
                 let kd = KnownDistance {
                     point: a.coord,
-                    dist: a.get_distance_with_W(m.rssi),
+                    dist: a.get_distance_with_W(m.mean),
                 };
                 Some(kd)
             } else {
@@ -31,26 +32,22 @@ pub async fn solve_for(device_id: MAC) -> Result<Point, ()> {
         })
         .collect::<Vec<KnownDistance>>();
 
-    let mut posible_positions = Vec::new();
-    let n = knwon_distance.len();
-    for i in 0..n {
-        for j in 0..n {
-            if i == j {
-                continue;
-            }
+    let mut posible_positions = known_distance
+        .iter()
+        .permutations(3)
+        .filter_map(|per| trilat(per[0], per[1], per[2]))
+        .collect::<Vec<KnownDistance>>();
 
-            for k in 0..n {
-                if i == k || j == k {
-                    continue;
-                }
+    print!("Old len(): {} \t", posible_positions.len());
 
-                let point = trilat(&knwon_distance[i], &knwon_distance[j], &knwon_distance[k]);
-                if let Some(point) = point {
-                    posible_positions.push(point);
-                }
-            }
-        }
+    if let Some(last_position) = KnownPosition::get_last_for(device_id.as_str(), 2)
+        .await
+        .unwrap()
+    {
+        let last_position = Point::new(last_position.x, last_position.y);
+        posible_positions.retain(|p| last_position.distance_to(&p.point) < 3.0);
     }
+    println!("New len(): {}", posible_positions.len());
 
     let mut pos = Point::new(0.0, 0.0);
     let mut divisor = 0.0;
@@ -112,16 +109,16 @@ fn trilat(a: &KnownDistance, b: &KnownDistance, c: &KnownDistance) -> Option<Kno
     downer.rotate_by(-alpha);
 
     // Now we have two vectors with |Da| that point from A where the two posible positions are
-    let P = vec![a.point + upper, a.point + downer];
+    let P = [a.point + upper, a.point + downer];
 
     //Now we need to see which P[0] or P[1] is at distance Dc from pointC.
     //But since all numbers we got (Da,Db and Dc) cointain a lot of error and noise
     // we know that they won't be the same number so we need to pick the point that makes the distance to pointC the closest to Dc
 
-    let dist_to_C = vec![P[0].distance_to(&c.point), P[1].distance_to(&c.point)];
-    let error = vec![
-        f64::abs(dist_to_C[0] - c.dist) / c.dist,
-        f64::abs(dist_to_C[1] - c.dist) / c.dist,
+    let dist_to_C = [P[0].distance_to(&c.point), P[1].distance_to(&c.point)];
+    let error = [
+        f64::abs(dist_to_C[0] - c.dist),
+        f64::abs(dist_to_C[1] - c.dist),
     ];
 
     if error[0] < error[1] {
@@ -167,7 +164,8 @@ fn test_trilat() {
     };
 
     let pos = trilat(&a, &b, &c).unwrap();
+    let expected = Point::new(5.0, 3.5);
 
-    println!("Calculated {} +/- {:.2}", pos.point, pos.dist);
-    println!("Position expected (5.0, 3.5)")
+    assert!(f64::abs(pos.point.x - expected.x) < 0.5);
+    assert!(f64::abs(pos.point.y - expected.y) < 0.5);
 }
