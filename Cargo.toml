@@ -32,3 +32,5 @@ futures = "0.3"
 influxdb = { version = "0.5.2", default-features = false, features = ["derive", "use-serde", "reqwest-client"] }
 chrono = "0.4.19"
 rand = "0.8.5"
+rand_distr = "0.4.3"
+itertools = "0.10.3"
