@@ -3,9 +3,8 @@ use influxdb::{InfluxDbWriteable, ReadQuery};
 use serde::{Deserialize, Serialize};
 
 use crate::helper::for_async::get_influx_cli;
+use crate::influxdb_models::BEACONMEASURE_TIME_WINDOW;
 use crate::MAC;
-
-pub const TIME_WINDOW: u64 = 4;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, InfluxDbWriteable)]
 pub struct BeaconMeasure {
@@ -36,7 +35,7 @@ impl BeaconMeasure {
             .await
     }
     pub async fn get_for(device_id: &str) -> Result<Vec<BeaconMeasure>, influxdb::Error> {
-        let query = format!( "SELECT mean(rssi) FROM /measure_{}/ WHERE time > now() - {}s AND time < now() GROUP BY beacon_id;", device_id, TIME_WINDOW);
+        let query = format!( "SELECT mean(rssi) FROM /measure_{}/ WHERE time > now() - {}s AND time < now() GROUP BY beacon_id;", device_id, BEACONMEASURE_TIME_WINDOW);
 
         let mut database_result = get_influx_cli().json_query(ReadQuery::new(query)).await?;
 

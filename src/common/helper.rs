@@ -119,7 +119,7 @@ pub mod for_sync {
         let msg = mqtt::MessageBuilder::new()
             .topic(topic)
             .payload(payload)
-            .qos(1)
+            .qos(0)
             .finalize();
 
         client.publish(msg)

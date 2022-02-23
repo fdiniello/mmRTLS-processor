@@ -1,11 +1,11 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 
 use influxdb::Type;
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Serialize, Serializer};
 
-#[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
+#[derive(Default, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct MAC {
     s: [u8; 17],
 }
@@ -30,6 +30,12 @@ impl FromStr for MAC {
 }
 
 impl Display for MAC {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", String::from_utf8_lossy(&self.s))
+    }
+}
+
+impl Debug for MAC {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "{}", String::from_utf8_lossy(&self.s))
     }

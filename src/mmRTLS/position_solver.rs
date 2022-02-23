@@ -13,9 +13,7 @@ struct KnownDistance {
 pub async fn solve_for(device_id: MAC) -> Result<Point, ()> {
     let antennas = anntennas_hashmap();
 
-    let measure = BeaconMeasure::get_for(device_id.as_str())
-        .await
-        .unwrap();
+    let measure = BeaconMeasure::get_for(device_id.as_str()).await.unwrap();
 
     let known_distance = measure
         .iter()
